@@ -1,7 +1,0 @@
-/home/runner/work/spring-ai-chroma/spring-ai-chroma/src/main/java/com/example/springaichroma/SpringAiChromaApplication.java
-/home/runner/work/spring-ai-chroma/spring-ai-chroma/src/main/java/com/example/springaichroma/config/ChromaConfig.java
-/home/runner/work/spring-ai-chroma/spring-ai-chroma/src/main/java/com/example/springaichroma/controller/SearchController.java
-/home/runner/work/spring-ai-chroma/spring-ai-chroma/src/main/java/com/example/springaichroma/service/ChromaClient.java
-/home/runner/work/spring-ai-chroma/spring-ai-chroma/src/main/java/com/example/springaichroma/model/SearchResult.java
-/home/runner/work/spring-ai-chroma/spring-ai-chroma/src/main/java/com/example/springaichroma/service/ChromaService.java
-/home/runner/work/spring-ai-chroma/spring-ai-chroma/src/main/java/com/example/springaichroma/model/SearchRequest.java
