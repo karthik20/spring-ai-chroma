@@ -1,0 +1,7 @@
+com/example/springaichroma/model/SearchRequest.class
+com/example/springaichroma/controller/SearchController.class
+com/example/springaichroma/service/ChromaClient.class
+com/example/springaichroma/service/ChromaService.class
+com/example/springaichroma/config/ChromaConfig.class
+com/example/springaichroma/SpringAiChromaApplication.class
+com/example/springaichroma/model/SearchResult.class
