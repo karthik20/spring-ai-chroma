@@ -1,0 +1,36 @@
+
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    volumes:
+      - chroma_data:/tmp/chroma-data
+    healthcheck:
+      test: ["NONE"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - ONNX_MODEL_PATH=file:/app/models/onnx/all-MiniLM-L6-v2/model.onnx
+      - ONNX_TOKENIZER_PATH=file:/app/models/onnx/all-MiniLM-L6-v2/tokenizer.json
+      - APP_INTERACTIVE_MODE=false
+    depends_on:
+      chromadb:
+        condition: service_started
+    volumes:
+      - app_logs:/app/logs
+
+volumes:
+  chroma_data:
+  app_logs:
