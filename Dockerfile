@@ -1,68 +1,44 @@
-# Multi-stage Dockerfile for Spring AI ChromaDB Integration
+# Dockerfile for Spring Boot app with ONNX model downloads
 
-# Stage 1: Python base for ChromaDB server
-FROM python:3.11-slim as chroma-base
-
-# Install ChromaDB dependencies
-RUN pip install --no-cache-dir chromadb==0.4.22
-
-# Create directory for ChromaDB data persistence
-RUN mkdir -p /chroma/data
-
-# Stage 2: Java build stage
-FROM openjdk:17-jdk-slim as java-build
+FROM openjdk:21-jdk-slim
 
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml
-COPY pom.xml ./
-COPY .mvn .mvn
-COPY mvnw ./
-
-# Download dependencies
-RUN ./mvnw dependency:go-offline -B
-
-# Copy source code
-COPY src ./src
-
-# Build the application
-RUN ./mvnw clean package -DskipTests
-
-# Stage 3: Runtime stage with both Python and Java
-FROM openjdk:17-jdk-slim as runtime
-
-# Install Python and pip
+# Install Maven, curl, and git (needed for huggingface-cli)
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip curl && \
+    apt-get install -y maven curl git python3 python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create symbolic link for python command
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# Create directories for ONNX models
+RUN mkdir -p /app/models/onnx/all-MiniLM-L6-v2
 
-# Install ChromaDB
-RUN pip3 install --no-cache-dir chromadb==0.4.22
+# Download ONNX model and tokenizer directly using curl
+# Note: Using direct download URLs instead of git-lfs for simplicity
+RUN curl -L https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model.onnx \
+    --output /app/models/onnx/all-MiniLM-L6-v2/model.onnx && \
+    curl -L https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer.json \
+    --output /app/models/onnx/all-MiniLM-L6-v2/tokenizer.json
 
-# Create application user
-RUN useradd -r -s /bin/false appuser
+# Copy project files
+COPY pom.xml ./
+COPY src ./src
 
-# Create directories
-RUN mkdir -p /app /chroma/data && chown -R appuser:appuser /app /chroma
+# Build the application
+RUN mvn clean install -DskipTests
 
-# Copy the built JAR from build stage
-COPY --from=java-build /app/target/*.jar /app/spring-ai-chroma.jar
+# Expose Spring Boot port
+EXPOSE 8080
 
-# Copy startup script
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh && chown appuser:appuser /app/docker-entrypoint.sh
+# Set environment variables for the model paths - using file:/ prefix for filesystem paths
+ENV ONNX_MODEL_PATH=file:/app/models/onnx/all-MiniLM-L6-v2/model.onnx
+ENV ONNX_TOKENIZER_PATH=file:/app/models/onnx/all-MiniLM-L6-v2/tokenizer.json
 
-# Switch to application user
-USER appuser
+# Create directory for cache
+RUN mkdir -p /app/cache && chmod 777 /app/cache
 
-WORKDIR /app
+# For debugging purposes, you can uncomment the following line to keep the container running
+# CMD ["sleep", "infinity"]
 
-# Expose ports
-EXPOSE 8080 8000
-
-# Use the startup script
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Run the Spring Boot application with model path environment variables and API-only mode
+ENTRYPOINT ["java", "-Dapp.interactive-mode=false", "-jar", "target/springai-chromadb-0.0.1-SNAPSHOT.jar"]

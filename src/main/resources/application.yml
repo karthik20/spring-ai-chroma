@@ -1,16 +1,34 @@
 server:
   port: 8080
 
-chroma:
-  host: ${CHROMA_HOST:localhost}
-  port: ${CHROMA_PORT:8000}
-  collection-name: ${CHROMA_COLLECTION:spring-ai-docs}
+# Application configuration
+app:
+  interactive-mode: true  # Set to true for command-line interactive mode, false for API-only mode
 
-openai:
-  api-key: ${OPENAI_API_KEY:demo}
-  model: text-embedding-ada-002
+spring:
+  ai:
+    vectorstore:
+      chroma:
+        initialize-schema: true
+        database-name: ${CHROMA_DATABASE:banking-search}
+        client:
+          host: ${CHROMA_HOST:localhost}
+          port: ${CHROMA_PORT:8000}
+        collection-name: ${CHROMA_COLLECTION:spring-ai-docs}
+    embedding:
+      transformer:
+        cache:
+          directory: "file:/app/cache"
+          enabled: true
+        onnx:
+          model-output-name: last_hidden_state
+          # Use the environment variable or fallback to local path
+          model-uri: ${ONNX_MODEL_PATH:file:/home/karthik/projects/ai-models/onnx/all-MiniLM-L6-v2/model.onnx}
+        tokenizer:
+          # Use the environment variable or fallback to local path
+          uri: ${ONNX_TOKENIZER_PATH:file:/home/karthik/projects/ai-models/onnx/all-MiniLM-L6-v2/tokenizer.json}
 
 logging:
   level:
-    com.example.springaichroma: DEBUG
+    "[com.karthik.springaichroma]": DEBUG
     root: INFO
